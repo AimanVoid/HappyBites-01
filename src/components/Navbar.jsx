@@ -37,7 +37,20 @@ function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
             }`}
             onClick={handleLinkClick}
           >
-            Happy<span className="text-orange-500">Bites</span>
+            <a
+              href="#home"
+              className={`text-2xl font-bold transition-colors ${
+                darkMode ? "text-white" : "text-slate-800"
+              }`}
+              onClick={handleLinkClick}
+            >
+              <img
+                src="/happyBitesLogo.png"
+                alt="HappyBites"
+                className="h-12 w-12 object-contain"
+              />
+            </a>
+            {/* Happy<span className="text-orange-500">Bites</span> */}
           </a>
 
           {/* Desktop Navigation */}
