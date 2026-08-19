@@ -44,13 +44,13 @@ function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
               }`}
               onClick={handleLinkClick}
             >
-              <img
+              {/* <img
                 src="/happyBitesLogo.png"
                 alt="HappyBites"
                 className="h-12 w-12 object-contain"
-              />
+              /> */}
             </a>
-            {/* Happy<span className="text-orange-500">Bites</span> */}
+            Happy<span className="text-orange-500">Bites</span>
           </a>
 
           {/* Desktop Navigation */}
