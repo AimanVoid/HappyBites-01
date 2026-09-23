@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaShoppingCart, FaBars, FaTimes, FaChevronDown } from "react-icons/fa";
-import categories from "../data/categories";
+import axios from "axios";
+import API_URL from "../config";
 
-function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
+function Navbar({
+  cartCount = 0,
+  openCart,
+  darkMode,
+  toggleTheme,
+  onCategorySelect,
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+  const [categories, setCategories] = useState([]);
 
   const links = [
     { label: "Home", href: "#home" },
@@ -18,6 +26,26 @@ function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
     setCategoriesOpen(false);
     setMobileCategoriesOpen(false);
   };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+  `${API_URL}/api/categories`,
+);
+
+        const activeCategories = response.data.filter(
+          (category) => category.isActive,
+        );
+
+        setCategories(activeCategories);
+      } catch (error) {
+        console.error("Failed to fetch navbar categories:", error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   return (
     <nav
@@ -44,13 +72,13 @@ function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
               }`}
               onClick={handleLinkClick}
             >
-              {/* <img
+              <img
                 src="/happyBitesLogo.png"
                 alt="HappyBites"
                 className="h-12 w-12 object-contain"
-              /> */}
+              />
             </a>
-            Happy<span className="text-orange-500">Bites</span>
+            {/* Happy<span className="text-orange-500">Bites</span> */}
           </a>
 
           {/* Desktop Navigation */}
@@ -98,20 +126,30 @@ function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
                       : "bg-white border-gray-100"
                   }`}
                 >
-                  {categories.map((category) => (
-                    <a
-                      key={category.label}
-                      href={category.href}
-                      onClick={handleLinkClick}
-                      className={`block px-4 py-2.5 text-sm transition-colors ${
-                        darkMode
-                          ? "text-slate-300 hover:bg-slate-800 hover:text-orange-400"
-                          : "text-slate-700 hover:bg-orange-50 hover:text-orange-500"
-                      }`}
-                    >
-                      {category.label}
-                    </a>
-                  ))}
+                 
+                    {categories.map((category) => (
+  <button
+    key={category._id}
+    type="button"
+    onClick={() => {
+      onCategorySelect(category.slug);
+
+      handleLinkClick();
+
+      document.getElementById("shop")?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }}
+    className={`block w-full text-left px-4 py-2.5 text-sm transition-colors ${
+      darkMode
+        ? "text-slate-300 hover:bg-slate-800 hover:text-orange-400"
+        : "text-slate-700 hover:bg-orange-50 hover:text-orange-500"
+    }`}
+  >
+    {category.name}
+  </button>
+))}
+                  
                 </div>
               )}
             </div>
@@ -220,19 +258,27 @@ function Navbar({ cartCount = 0, openCart, darkMode, toggleTheme }) {
               {mobileCategoriesOpen && (
                 <div className="ml-4 flex flex-col border-l-2 border-orange-100">
                   {categories.map((category) => (
-                    <a
-                      key={category.label}
-                      href={category.href}
-                      onClick={handleLinkClick}
-                      className={`px-4 py-2.5 text-sm transition-colors ${
-                        darkMode
-                          ? "text-slate-400 hover:text-orange-400"
-                          : "text-slate-600 hover:text-orange-500"
-                      }`}
-                    >
-                      {category.label}
-                    </a>
-                  ))}
+  <button
+    key={category._id}
+    type="button"
+    onClick={() => {
+      onCategorySelect(category.slug);
+
+      handleLinkClick();
+
+      document.getElementById("shop")?.scrollIntoView({
+        behavior: "smooth",
+      });
+    }}
+    className={`px-4 py-2.5 text-sm text-left transition-colors ${
+      darkMode
+        ? "text-slate-400 hover:text-orange-400"
+        : "text-slate-600 hover:text-orange-500"
+    }`}
+  >
+    {category.name}
+  </button>
+))}
                 </div>
               )}
 

@@ -1,43 +1,83 @@
-import { FaDog, FaCat, FaDove, FaFish, FaUtensils } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  FaDog,
+  FaCat,
+  FaDove,
+  FaFish,
+  FaUtensils,
+} from "react-icons/fa";
+import API_URL from "../config";
 
 function Categories({ selectedCategory, onCategorySelect, darkMode }) {
-  const categories = [
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const categoryMeta = {
+    dogs: {
+      description: "Food and essentials for dogs",
+      icon: <FaDog />,
+    },
+    cats: {
+      description: "Food and essentials for cats",
+      icon: <FaCat />,
+    },
+    birds: {
+      description: "Food and essentials for birds",
+      icon: <FaDove />,
+    },
+    fish: {
+      description: "Food and essentials for fish",
+      icon: <FaFish />,
+    },
+    "human-food": {
+      description: "Food items for everyone",
+      icon: <FaUtensils />,
+    },
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        setError("");
+
+        const response = await axios.get(`${API_URL}/api/categories`)
+
+        const activeCategories = response.data.filter(
+          (category) => category.isActive
+        );
+
+        setCategories(activeCategories);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+
+        setError("Unable to load categories right now.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const allCategories = [
     {
       id: "all",
       title: "All Products",
       description: "Browse everything",
       icon: <FaUtensils />,
     },
-    {
-      id: "dogs",
-      title: "Dog Food",
-      description: "Food and essentials for dogs",
-      icon: <FaDog />,
-    },
-    {
-      id: "cats",
-      title: "Cat Food",
-      description: "Food and essentials for cats",
-      icon: <FaCat />,
-    },
-    {
-      id: "birds",
-      title: "Bird Food",
-      description: "Food and essentials for birds",
-      icon: <FaDove />,
-    },
-    {
-      id: "fish",
-      title: "Fish Food",
-      description: "Food and essentials for fish",
-      icon: <FaFish />,
-    },
-    {
-      id: "human-food",
-      title: "Human Food",
-      description: "Food items for everyone",
-      icon: <FaUtensils />,
-    },
+    ...categories.map((category) => ({
+      id: category.slug,
+      title: category.name,
+      description:
+        categoryMeta[category.slug]?.description ||
+        "Explore products in this category",
+      icon:
+        categoryMeta[category.slug]?.icon || <FaUtensils />,
+    })),
   ];
 
   return (
@@ -63,66 +103,95 @@ function Categories({ selectedCategory, onCategorySelect, darkMode }) {
           </h2>
 
           <p
-            className={`mt-3 ${darkMode ? "text-slate-400" : "text-slate-500"}`}
+            className={`mt-3 ${
+              darkMode ? "text-slate-400" : "text-slate-500"
+            }`}
           >
             Explore our food categories for pets and people.
           </p>
         </div>
 
-        {/* Categories */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
-          {categories.map((category) => (
-            <button
-              onClick={() => {
-                onCategorySelect(category.id);
-                document.getElementById("shop")?.scrollIntoView({
-                  behavior: "smooth",
-                });
-              }}
-              key={category.id}
-              type="button"
-              className={`group rounded-2xl border p-6 text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 ${
-                darkMode
-                  ? "bg-slate-900 border-slate-800"
-                  : "bg-white border-gray-100"
-              } ${
-                selectedCategory === category.id
-                  ? darkMode
-                    ? "border-orange-500 ring-2 ring-orange-500/20"
-                    : "border-orange-500 ring-2 ring-orange-100"
-                  : darkMode
-                    ? "border-slate-800"
-                    : "border-gray-100"
+        {/* Loading */}
+        {loading && (
+          <div className="text-center py-10">
+            <div className="text-3xl">⏳</div>
+
+            <p
+              className={`mt-3 ${
+                darkMode ? "text-slate-400" : "text-slate-500"
               }`}
             >
-              <div
-                className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl transition-colors duration-300 ${
+              Loading categories...
+            </p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="text-center py-10">
+            <div className="text-3xl">⚠️</div>
+
+            <p className="mt-3 text-red-500">{error}</p>
+          </div>
+        )}
+
+        {/* Categories */}
+        {!loading && !error && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+            {allCategories.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => {
+                  onCategorySelect(category.id);
+
+                  document.getElementById("shop")?.scrollIntoView({
+                    behavior: "smooth",
+                  });
+                }}
+                className={`group rounded-2xl border p-6 text-center shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 ${
                   darkMode
-                    ? "bg-orange-500/10 text-orange-400 group-hover:bg-orange-500 group-hover:text-white"
-                    : "bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white"
+                    ? "bg-slate-900 border-slate-800"
+                    : "bg-white border-gray-100"
+                } ${
+                  selectedCategory === category.id
+                    ? darkMode
+                      ? "border-orange-500 ring-2 ring-orange-500/20"
+                      : "border-orange-500 ring-2 ring-orange-100"
+                    : darkMode
+                      ? "border-slate-800"
+                      : "border-gray-100"
                 }`}
               >
-                {category.icon}
-              </div>
+                <div
+                  className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center text-3xl transition-colors duration-300 ${
+                    darkMode
+                      ? "bg-orange-500/10 text-orange-400 group-hover:bg-orange-500 group-hover:text-white"
+                      : "bg-orange-50 text-orange-500 group-hover:bg-orange-500 group-hover:text-white"
+                  }`}
+                >
+                  {category.icon}
+                </div>
 
-              <h3
-                className={`mt-5 font-semibold ${
-                  darkMode ? "text-white" : "text-slate-800"
-                }`}
-              >
-                {category.title}
-              </h3>
+                <h3
+                  className={`mt-5 font-semibold ${
+                    darkMode ? "text-white" : "text-slate-800"
+                  }`}
+                >
+                  {category.title}
+                </h3>
 
-              <p
-                className={`mt-2 text-sm ${
-                  darkMode ? "text-slate-400" : "text-slate-500"
-                }`}
-              >
-                {category.description}
-              </p>
-            </button>
-          ))}
-        </div>
+                <p
+                  className={`mt-2 text-sm ${
+                    darkMode ? "text-slate-400" : "text-slate-500"
+                  }`}
+                >
+                  {category.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );

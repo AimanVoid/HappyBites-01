@@ -6,29 +6,15 @@ import {
   FaPaw,
 } from "react-icons/fa";
 
-const WHATSAPP_NUMBERS = [
-  {
-    number: "923703148097",
-    display: "+92 370 3148097",
-  },
-  {
-    number: "923323486324",
-    display: "+92 332 3486324",
-  },
-];
-
 const INSTAGRAM_URL = "https://www.instagram.com/_aimanmaroof/";
-const EMAIL = "aiman.maroofofficial@gmail.com";
 
-function Footer() {
+function Footer({ settings }) {
   const currentYear = new Date().getFullYear();
 
   return (
     <footer className="bg-slate-900 text-slate-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12">
-
           {/* Brand */}
           <div>
             <a
@@ -49,7 +35,7 @@ function Footer() {
 
             {/* Social Links */}
             <div className="mt-6 flex items-center gap-3">
-
+              {/* Instagram */}
               <a
                 href={INSTAGRAM_URL}
                 target="_blank"
@@ -60,8 +46,9 @@ function Footer() {
                 <FaInstagram />
               </a>
 
+              {/* WhatsApp */}
               <a
-                href={`https://wa.me/${WHATSAPP_NUMBERS[0].number}`}
+                href={`https://wa.me/${settings?.whatsappNumber || ""}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Chat with HappyBites on WhatsApp"
@@ -70,14 +57,14 @@ function Footer() {
                 <FaWhatsapp />
               </a>
 
+              {/* Email */}
               <a
-                href={`mailto:${EMAIL}`}
+                href={`mailto:${settings?.email || ""}`}
                 aria-label="Email HappyBites"
                 className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 hover:bg-orange-500 hover:text-white hover:border-orange-500 transition-all duration-300"
               >
                 <FaEnvelope />
               </a>
-
             </div>
           </div>
 
@@ -100,9 +87,6 @@ function Footer() {
                     href={href}
                     className="text-slate-400 hover:text-orange-400 transition-colors"
                   >
-                    <span className="text-orange-400 opacity-0 -ml-4 group-hover:opacity-100">
-                      →
-                    </span>
                     {label}
                   </a>
                 </li>
@@ -117,40 +101,39 @@ function Footer() {
             </h3>
 
             <div className="mt-5 space-y-4">
-
               {/* Email */}
               <a
-                href={`mailto:${EMAIL}`}
+                href={`mailto:${settings?.email || ""}`}
                 className="flex items-start gap-3 text-sm text-slate-400 hover:text-orange-400 transition-colors"
               >
                 <FaEnvelope className="mt-1 text-orange-400 shrink-0" />
 
                 <span className="break-all">
-                  {EMAIL}
+                  {settings?.email || "Email not available"}
                 </span>
               </a>
 
               {/* WhatsApp */}
-              {WHATSAPP_NUMBERS.map((contact) => (
-                <a
-                  key={contact.number}
-                  href={`https://wa.me/${contact.number}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 text-sm text-slate-400 hover:text-green-400 transition-colors"
-                >
-                  <FaWhatsapp className="text-green-500 shrink-0" />
-                  {contact.display}
-                </a>
-              ))}
+              <a
+                href={`https://wa.me/${settings?.whatsappNumber || ""}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 text-sm text-slate-400 hover:text-green-400 transition-colors"
+              >
+                <FaWhatsapp className="text-green-500 shrink-0" />
 
+                <span>
+                  {settings?.whatsappNumber
+                    ? `+${settings.whatsappNumber}`
+                    : "WhatsApp not available"}
+                </span>
+              </a>
             </div>
           </div>
 
           {/* Help CTA */}
           <div>
             <div className="rounded-2xl bg-white/5 border border-white/10 p-5">
-
               <div className="w-11 h-11 rounded-xl bg-green-500/10 flex items-center justify-center text-green-400">
                 <FaWhatsapp className="text-xl" />
               </div>
@@ -165,7 +148,7 @@ function Footer() {
               </p>
 
               <a
-                href={`https://wa.me/${WHATSAPP_NUMBERS[0].number}`}
+                href={`https://wa.me/${settings?.whatsappNumber || ""}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 mt-5 px-4 py-3 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition-colors"
@@ -174,15 +157,12 @@ function Footer() {
                 Chat on WhatsApp
                 <FaArrowRight className="text-xs" />
               </a>
-
             </div>
           </div>
-
         </div>
 
         {/* Bottom */}
         <div className="mt-14 pt-6 border-t border-slate-700/70 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
-
           <p className="text-slate-500">
             © {currentYear} HappyBites. All rights reserved.
           </p>
@@ -199,9 +179,7 @@ function Footer() {
           >
             Back to top ↑
           </a>
-
         </div>
-
       </div>
     </footer>
   );

@@ -1,34 +1,67 @@
 import { useState } from "react";
-import config from "../data/config";
+import axios from "axios";
+import API_URL from "../config";
 
-function Checkout({ cart, onClose, onOrderComplete }) {
+function Checkout({ cart, settings, onClose, onOrderComplete }) {
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
     address: "",
   });
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [error, setError] = useState("");
 
-  const total = cart.reduce(
+  const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
-    0
+    0,
   );
 
-  const handleSubmit = (e) => {
+  const deliveryCharges = Number(settings?.deliveryCharges || 0);
+
+  const total = subtotal + deliveryCharges;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const orderItems = cart
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.name} x${item.quantity} - Rs ${
-            item.price * item.quantity
-          }`
-      )
-      .join("\n");
+    if (!settings?.whatsappNumber) {
+      setError("WhatsApp number is not available right now.");
+      return;
+    }
 
-    const message = `
+    setPlacingOrder(true);
+    setError("");
+
+    try {
+      const orderData = {
+        customer,
+        items: cart.map((item) => ({
+          productId: item._id || item.id,
+          quantity: item.quantity,
+        })),
+        paymentMethod: "COD",
+      };
+
+      // Save order to backend
+      const response = await axios.post(`${API_URL}/api/orders`, orderData);
+
+      const savedOrder = response.data;
+
+      // Create WhatsApp message
+      const orderItems = savedOrder.items
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.name} x${item.quantity} - Rs ${
+              item.subtotal
+            }`,
+        )
+        .join("\n");
+
+      const message = `
 Hello HappyBites! 👋
 
 I would like to place an order.
+
+Order ID: ${savedOrder._id}
 
 Customer Details:
 Name: ${customer.name}
@@ -38,23 +71,30 @@ Address: ${customer.address}
 Order:
 ${orderItems}
 
-Total: Rs ${total}
+Total: Rs ${savedOrder.totalAmount}
 
 Payment Method: Cash on Delivery
     `.trim();
 
-    const whatsappUrl = `https://wa.me/${
-      config.whatsappNumber
-    }?text=${encodeURIComponent(message)}`;
+      const whatsappUrl = `https://wa.me/${
+        settings?.whatsappNumber
+      }?text=${encodeURIComponent(message)}`;
 
-    window.open(whatsappUrl, "_blank");
-    onOrderComplete();
+      window.open(whatsappUrl, "_blank");
+
+      onOrderComplete();
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+          "Failed to place order. Please try again.",
+      );
+    } finally {
+      setPlacingOrder(false);
+    }
   };
-
   return (
     <section className="py-20 transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-
         {/* Header */}
         <div className="mb-8">
           <button
@@ -74,7 +114,6 @@ Payment Method: Cash on Delivery
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-
           {/* Customer Details */}
           <form
             onSubmit={handleSubmit}
@@ -85,7 +124,6 @@ Payment Method: Cash on Delivery
             </h3>
 
             <div className="space-y-5">
-
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -161,19 +199,20 @@ Payment Method: Cash on Delivery
               </div>
 
               {/* Place Order */}
+              {error && <p className="text-sm text-red-500">{error}</p>}
+
               <button
                 type="submit"
-                className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                disabled={placingOrder}
+                className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Place Order
+                {placingOrder ? "Placing Order..." : "Place Order"}
               </button>
-
             </div>
           </form>
 
           {/* Order Summary */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 p-6 h-fit transition-colors duration-300">
-
             <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-6">
               Order Summary
             </h3>
@@ -185,7 +224,6 @@ Payment Method: Cash on Delivery
                   className="flex items-center justify-between gap-4"
                 >
                   <div className="flex items-center gap-3">
-
                     <img
                       src={item.image}
                       alt={item.name}
@@ -201,7 +239,6 @@ Payment Method: Cash on Delivery
                         Qty: {item.quantity}
                       </p>
                     </div>
-
                   </div>
 
                   <p className="font-semibold text-slate-800 dark:text-white">
@@ -211,9 +248,31 @@ Payment Method: Cash on Delivery
               ))}
             </div>
 
-            <div className="border-t border-gray-100 dark:border-slate-700 mt-6 pt-5">
+            <div className="border-t border-gray-100 dark:border-slate-700 mt-6 pt-5 space-y-3">
+              {/* Subtotal */}
               <div className="flex items-center justify-between">
+                <span className="text-slate-600 dark:text-slate-400">
+                  Subtotal
+                </span>
 
+                <span className="font-medium text-slate-800 dark:text-white">
+                  Rs {subtotal}
+                </span>
+              </div>
+
+              {/* Delivery Charges */}
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600 dark:text-slate-400">
+                  Delivery Charges
+                </span>
+
+                <span className="font-medium text-slate-800 dark:text-white">
+                  Rs {deliveryCharges}
+                </span>
+              </div>
+
+              {/* Total */}
+              <div className="border-t border-gray-100 dark:border-slate-700 pt-3 flex items-center justify-between">
                 <span className="text-slate-600 dark:text-slate-400">
                   Total
                 </span>
@@ -221,12 +280,9 @@ Payment Method: Cash on Delivery
                 <span className="text-xl font-bold text-slate-800 dark:text-white">
                   Rs {total}
                 </span>
-
               </div>
             </div>
-
           </div>
-
         </div>
       </div>
     </section>

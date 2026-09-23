@@ -9,6 +9,8 @@ import OrderSuccess from "./components/OrderSuccess";
 import About from "./components/About";
 import Contact from "./components/Contact";
 import Footer from "./components/Footer";
+import axios from "axios";
+import API_URL from "./config";
 
 function App() {
   const [cart, setCart] = useState(() => {
@@ -27,12 +29,32 @@ function App() {
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem("happy_bites_theme") === "dark";
   });
+  const [settings, setSettings] = useState(null);
+  const [settingsLoading, setSettingsLoading] = useState(true);
 
   useEffect(() => {
     localStorage.setItem("happy_bites_theme", darkMode ? "dark" : "light");
 
     document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/settings/public`,
+        );
+
+        setSettings(response.data);
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+      } finally {
+        setSettingsLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("paw_plate_cart", JSON.stringify(cart));
@@ -97,6 +119,7 @@ function App() {
         openCart={() => setCartOpen(true)}
         darkMode={darkMode}
         toggleTheme={() => setDarkMode((prev) => !prev)}
+        onCategorySelect={setSelectedCategory}
       />
 
       <main className="pt-16">
@@ -105,6 +128,7 @@ function App() {
         ) : checkoutOpen ? (
           <Checkout
             cart={cart}
+            settings={settings}
             onClose={() => setCheckoutOpen(false)}
             onOrderComplete={() => {
               setCart([]);
@@ -130,8 +154,8 @@ function App() {
               onCategorySelect={setSelectedCategory}
             />
 
-            <Contact />
-            <Footer />
+            <Contact settings={settings} />
+            <Footer settings={settings} />
           </>
         )}
       </main>
